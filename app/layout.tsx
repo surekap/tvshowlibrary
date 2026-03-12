@@ -19,7 +19,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "EpisodeCalendar — TV Show Tracker",
+  title: "TV Show Library",
   description: "Track your favorite TV shows and never miss an episode",
 };
 
@@ -47,7 +47,7 @@ export default function RootLayout({
                     </svg>
                   </div>
                   <span className="font-display font-bold text-lg text-white tracking-tight group-hover:text-indigo-200 transition-colors">
-                    EpisodeCalendar
+                    TV Show Library
                   </span>
                 </Link>
 
