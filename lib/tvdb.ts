@@ -63,6 +63,7 @@ export interface TvdbSearchResult {
   first_air_time?: string;
   year?: string;
   type?: string;
+  remote_ids?: Array<{ id: string; type: number; sourceName: string }>;
 }
 
 export interface TvdbShow {

@@ -2,50 +2,37 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { shows, episodes } from "@/lib/schema";
+import { shows, episodes, watchedEpisodes } from "@/lib/schema";
 import { getShow, getEpisodes } from "@/lib/tvdb";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export async function GET() {
   try {
-    const allShows = await db.query.shows.findMany({
-      orderBy: (shows, { asc }) => [asc(shows.name)],
-      with: {
-        episodes: {
-          with: {
-            watchedEpisodes: true,
-          },
-        },
-      },
-    });
+    // COUNT aggregates — much faster than loading all episode rows
+    const rows = await db
+      .select({
+        id: shows.id,
+        tvdbId: shows.tvdbId,
+        name: shows.name,
+        overview: shows.overview,
+        posterUrl: shows.posterUrl,
+        status: shows.status,
+        network: shows.network,
+        archived: shows.archived,
+        createdAt: shows.createdAt,
+        totalEpisodes: sql<number>`count(distinct ${episodes.id})`.as("total_episodes"),
+        watchedCount: sql<number>`count(distinct ${watchedEpisodes.id})`.as("watched_count"),
+      })
+      .from(shows)
+      .leftJoin(episodes, eq(episodes.showId, shows.id))
+      .leftJoin(watchedEpisodes, eq(watchedEpisodes.episodeId, episodes.id))
+      .groupBy(shows.id)
+      .orderBy(shows.name);
 
-    const formatted = allShows.map((show) => {
-      const totalEpisodes = show.episodes.length;
-      const watchedCount = show.episodes.filter(
-        (ep) => ep.watchedEpisodes.length > 0
-      ).length;
-
-      return {
-        id: show.id,
-        tvdbId: show.tvdbId,
-        name: show.name,
-        overview: show.overview,
-        posterUrl: show.posterUrl,
-        status: show.status,
-        network: show.network,
-        createdAt: show.createdAt,
-        totalEpisodes,
-        watchedCount,
-      };
-    });
-
-    return NextResponse.json({ shows: formatted });
+    return NextResponse.json({ shows: rows });
   } catch (error) {
     console.error("GET /api/shows error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch shows" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch shows" }, { status: 500 });
   }
 }
 
@@ -61,64 +48,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if show already exists
     const existing = await db.query.shows.findFirst({
       where: eq(shows.tvdbId, tvdbId),
     });
 
     if (existing) {
-      return NextResponse.json(
-        { error: "Show already in watchlist" },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "Show already in watchlist" }, { status: 409 });
     }
 
-    // Fetch show details from TVDB
     const tvdbShow = await getShow(tvdbId);
     if (!tvdbShow) {
-      return NextResponse.json(
-        { error: "Show not found on TVDB" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Show not found on TVDB" }, { status: 404 });
     }
 
-    // Determine poster URL
-    let posterUrl: string | null = null;
-    if (tvdbShow.image) {
-      posterUrl = tvdbShow.image;
-    }
-
-    // Insert show into DB
     const [newShow] = await db
       .insert(shows)
       .values({
         tvdbId: tvdbShow.id,
         name: tvdbShow.name,
         overview: tvdbShow.overview ?? null,
-        posterUrl,
+        posterUrl: tvdbShow.image ?? null,
         status: tvdbShow.status?.name ?? null,
         network: tvdbShow.originalNetwork?.name ?? null,
       })
       .returning();
 
-    // Fetch all episodes
     const tvdbEpisodes = await getEpisodes(tvdbId);
-
     if (tvdbEpisodes.length > 0) {
-      // Filter valid episodes (must have season and episode number)
-      const validEpisodes = tvdbEpisodes.filter(
-        (ep) =>
-          ep.id &&
-          typeof ep.seasonNumber === "number" &&
-          typeof ep.number === "number"
+      const valid = tvdbEpisodes.filter(
+        (ep) => ep.id && typeof ep.seasonNumber === "number" && typeof ep.number === "number"
       );
-
-      // Insert episodes in batches of 100
-      const BATCH_SIZE = 100;
-      for (let i = 0; i < validEpisodes.length; i += BATCH_SIZE) {
-        const batch = validEpisodes.slice(i, i + BATCH_SIZE);
+      for (let i = 0; i < valid.length; i += 100) {
         await db.insert(episodes).values(
-          batch.map((ep) => ({
+          valid.slice(i, i + 100).map((ep) => ({
             tvdbId: ep.id,
             showId: newShow.id,
             seasonNumber: ep.seasonNumber,
@@ -135,9 +97,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ show: newShow }, { status: 201 });
   } catch (error) {
     console.error("POST /api/shows error:", error);
-    return NextResponse.json(
-      { error: "Failed to add show" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to add show" }, { status: 500 });
   }
 }

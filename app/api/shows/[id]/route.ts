@@ -76,3 +76,35 @@ export async function GET(
     );
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const id = parseInt(params.id, 10);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid show ID" }, { status: 400 });
+    }
+
+    const body = await request.json();
+    if (typeof body.archived !== "boolean") {
+      return NextResponse.json({ error: "archived must be a boolean" }, { status: 400 });
+    }
+
+    const [updated] = await db
+      .update(shows)
+      .set({ archived: body.archived })
+      .where(eq(shows.id, id))
+      .returning({ id: shows.id, archived: shows.archived });
+
+    if (!updated) {
+      return NextResponse.json({ error: "Show not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ show: updated });
+  } catch (error) {
+    console.error("PATCH /api/shows/[id] error:", error);
+    return NextResponse.json({ error: "Failed to update show" }, { status: 500 });
+  }
+}

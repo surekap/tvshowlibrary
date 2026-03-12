@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { episodes, shows, watchedEpisodes } from "@/lib/schema";
-import { and, gte, lte, eq } from "drizzle-orm";
+import { and, gte, lte, eq, ne } from "drizzle-orm";
 import { getShowColor } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
@@ -42,7 +42,8 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           gte(episodes.aired, start.slice(0, 10)),
-          lte(episodes.aired, end.slice(0, 10))
+          lte(episodes.aired, end.slice(0, 10)),
+          ne(shows.archived, true)
         )
       );
 

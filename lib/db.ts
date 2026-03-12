@@ -8,7 +8,9 @@ let _db: DrizzleDb | null = null;
 
 function getDb(): DrizzleDb {
   if (!_db) {
-    const sql = neon(process.env.DATABASE_URL!);
+    const sql = neon(process.env.DATABASE_URL!, {
+      fetchOptions: { cache: "no-store" },
+    });
     _db = drizzle(sql, { schema });
   }
   return _db;
