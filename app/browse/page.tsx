@@ -131,38 +131,22 @@ export default function BrowsePage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Browse Shows</h1>
-        <p className="text-sm text-gray-400 mt-1">
-          Search for TV shows and add them to your watchlist
-        </p>
+      <div className="mb-5">
+        <h1 className="font-display font-bold text-[var(--text-primary)]">Browse Shows</h1>
+        <p className="section-subtitle">Search and add shows to your watchlist</p>
       </div>
 
       {/* Search input */}
-      <div className="relative mb-6">
+      <div className="relative mb-5">
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
           {isSearching ? (
-            <svg
-              className="w-4 h-4 text-gray-400 animate-spin"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-4 h-4 text-[var(--text-secondary)] animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           ) : (
-            <svg
-              className="w-4 h-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
+            <svg className="w-4 h-4 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           )}
         </div>
@@ -170,18 +154,14 @@ export default function BrowsePage() {
           type="text"
           value={query}
           onChange={handleQueryChange}
-          placeholder="Search TV shows..."
-          className="w-full pl-10 pr-4 py-3 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
+          placeholder="Search TV shows…"
+          className="search-input"
           autoFocus
         />
         {query && (
           <button
-            onClick={() => {
-              setQuery("");
-              setResults([]);
-              setHasSearched(false);
-            }}
-            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-500 hover:text-gray-300"
+            onClick={() => { setQuery(""); setResults([]); setHasSearched(false); }}
+            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[var(--text-dim)] hover:text-[var(--text-secondary)] transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -190,24 +170,24 @@ export default function BrowsePage() {
         )}
       </div>
 
-      {/* Error message */}
+      {/* Error */}
       {error && (
-        <div className="mb-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-400 text-sm">
+        <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/25 rounded-xl text-rose-400 text-sm">
           {error}
         </div>
       )}
 
-      {/* Results */}
+      {/* Result count */}
       {hasSearched && !isSearching && (
-        <div className="mb-2 text-xs text-gray-500">
+        <p className="mb-3 text-xs text-[var(--text-dim)]">
           {results.length === 0
             ? `No results for "${query}"`
-            : `${results.length} result${results.length !== 1 ? "s" : ""} for "${query}"`}
-        </div>
+            : `${results.length} result${results.length !== 1 ? "s" : ""}`}
+        </p>
       )}
 
       {results.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {results.map((show) => (
             <ShowCard
               key={show.tvdbId}
@@ -227,26 +207,16 @@ export default function BrowsePage() {
         </div>
       )}
 
-      {/* Empty state — not yet searched */}
+      {/* Empty / prompt state */}
       {!hasSearched && (
-        <div className="text-center py-16 text-gray-600">
-          <svg
-            className="w-16 h-16 mx-auto mb-4 text-gray-800"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <p className="font-medium text-gray-500 text-lg">Search for a show</p>
-          <p className="text-sm mt-1 text-gray-600">
-            Start typing to search millions of shows from TVDB
-          </p>
+        <div className="text-center py-20 text-[var(--text-dim)]">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-center">
+            <svg className="w-7 h-7 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <p className="font-display font-semibold text-[var(--text-secondary)] text-base">Find your next show</p>
+          <p className="text-sm mt-1">Start typing to search the TVDB catalogue</p>
         </div>
       )}
     </div>

@@ -60,20 +60,20 @@ export default function CalendarPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-5 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Episode Calendar</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Track and discover upcoming episodes from your watchlist
+          <h1 className="font-display font-bold text-[var(--text-primary)]">Episode Calendar</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+            All upcoming episodes from your watchlist
           </p>
         </div>
-        <div className="flex items-center gap-3 text-xs text-gray-500">
+        <div className="flex-shrink-0 flex items-center gap-3 text-xs text-[var(--text-dim)] bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg px-3 py-2">
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-indigo-500 opacity-100 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-indigo-500 inline-block" />
             Upcoming
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded bg-indigo-500 opacity-50 inline-block" />
+            <span className="w-2.5 h-2.5 rounded-sm bg-indigo-500/35 inline-block" />
             Watched
           </span>
         </div>

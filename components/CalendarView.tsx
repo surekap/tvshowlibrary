@@ -86,7 +86,7 @@ export default function CalendarView({
   }, []);
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 overflow-hidden">
+    <div className="bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl p-3 sm:p-4 overflow-hidden">
       <FullCalendar
         ref={calendarRef}
         plugins={[dayGridPlugin, interactionPlugin, listPlugin]}
@@ -103,7 +103,7 @@ export default function CalendarView({
         height="auto"
         aspectRatio={1.8}
         eventDisplay="block"
-        dayMaxEvents={4}
+        dayMaxEvents={3}
         moreLinkClassNames="text-indigo-400 hover:text-indigo-300 text-xs font-medium"
         nowIndicator
         buttonText={{
@@ -118,26 +118,15 @@ export default function CalendarView({
           },
         }}
         noEventsContent={() => (
-          <div className="text-center py-8 text-gray-500">
-            <svg
-              className="w-12 h-12 mx-auto mb-3 text-gray-700"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
+          <div className="text-center py-12 text-[var(--text-dim)]">
+            <svg className="w-10 h-10 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p className="font-medium text-gray-400">No episodes this period</p>
-            <p className="text-sm mt-1">
+            <p className="font-medium text-[var(--text-secondary)] text-sm">No episodes this period</p>
+            <p className="text-xs mt-1 text-[var(--text-dim)]">
               Add shows from the{" "}
-              <a href="/browse" className="text-indigo-400 hover:underline">
-                Browse
-              </a>{" "}
+              <a href="/browse" className="text-indigo-400 hover:underline">Browse</a>{" "}
               page
             </p>
           </div>

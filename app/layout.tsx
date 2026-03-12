@@ -1,9 +1,25 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Syne, DM_Sans } from "next/font/google";
+import { TopNav, BottomNav } from "@/components/Nav";
 import "./globals.css";
 
+const syne = Syne({
+  subsets: ["latin"],
+  variable: "--font-syne",
+  display: "swap",
+  weight: ["400", "600", "700", "800"],
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
+  weight: ["300", "400", "500", "600"],
+});
+
 export const metadata: Metadata = {
-  title: "EpisodeCalendar - TV Show Tracker",
+  title: "EpisodeCalendar — TV Show Tracker",
   description: "Track your favorite TV shows and never miss an episode",
 };
 
@@ -13,76 +29,43 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-gray-950 text-gray-100">
+    <html lang="en" className={`dark ${syne.variable} ${dmSans.variable}`}>
+      <body className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] font-sans antialiased">
         <div className="flex flex-col min-h-screen">
-          {/* Top navigation bar */}
-          <header className="sticky top-0 z-50 border-b border-gray-800 bg-gray-950/95 backdrop-blur supports-[backdrop-filter]:bg-gray-950/80">
+          {/* Top header */}
+          <header className="sticky top-0 z-40 header-glass border-b border-[var(--border)]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center justify-between h-16">
+              <div className="flex items-center justify-between h-14 md:h-16">
                 {/* Logo */}
                 <Link
                   href="/"
-                  className="flex items-center gap-2 font-bold text-xl text-white hover:text-indigo-400 transition-colors"
+                  className="flex items-center gap-2.5 group"
                 >
-                  <svg
-                    className="w-7 h-7 text-indigo-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  EpisodeCalendar
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center group-hover:bg-indigo-600/30 transition-colors">
+                    <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                    </svg>
+                  </div>
+                  <span className="font-display font-bold text-lg text-white tracking-tight group-hover:text-indigo-200 transition-colors">
+                    EpisodeCalendar
+                  </span>
                 </Link>
 
-                {/* Navigation links */}
-                <nav className="flex items-center gap-1">
-                  <NavLink href="/" label="Calendar" icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  } />
-                  <NavLink href="/browse" label="Browse" icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  } />
-                  <NavLink href="/shows" label="My Shows" icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                    </svg>
-                  } />
-                  <NavLink href="/trends" label="Trends" icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  } />
-                  <NavLink href="/unwatched" label="Unwatched" icon={
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  } />
-                </nav>
+                {/* Desktop navigation */}
+                <TopNav />
               </div>
             </div>
           </header>
 
-          {/* Main content */}
-          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
+          {/* Main content — extra bottom padding on mobile for the bottom nav */}
+          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 md:py-8 pb-24 md:pb-8">
             {children}
           </main>
 
-          {/* Footer */}
-          <footer className="border-t border-gray-800 py-4">
+          {/* Footer — hidden on mobile (bottom nav is there instead) */}
+          <footer className="hidden md:block border-t border-[var(--border)] py-5">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <p className="text-center text-sm text-gray-600">
+              <p className="text-center text-xs text-[var(--text-dim)]">
                 Powered by{" "}
                 <a
                   href="https://thetvdb.com"
@@ -92,31 +75,15 @@ export default function RootLayout({
                 >
                   TVDB
                 </a>
+                {" "}· Episode data refreshes automatically
               </p>
             </div>
           </footer>
+
+          {/* Mobile bottom navigation */}
+          <BottomNav />
         </div>
       </body>
     </html>
-  );
-}
-
-function NavLink({
-  href,
-  label,
-  icon,
-}: {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 transition-all"
-    >
-      {icon}
-      {label}
-    </Link>
   );
 }
