@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, MutableRefObject } from "react";
+import { useCallback, useRef, useState, MutableRefObject } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -18,6 +18,7 @@ export default function CalendarView({
   refreshRef,
 }: CalendarViewProps) {
   const calendarRef = useRef<FullCalendar>(null);
+  const [calendarError, setCalendarError] = useState<string | null>(null);
 
   const fetchEvents = useCallback(
     async (
@@ -33,7 +34,9 @@ export default function CalendarView({
         const data = await res.json();
         successCallback(data.events ?? []);
       } catch (err) {
-        failureCallback(err instanceof Error ? err : new Error(String(err)));
+        const error = err instanceof Error ? err : new Error(String(err));
+        failureCallback(error);
+        setCalendarError("Failed to load episodes. Check your connection and try refreshing.");
       }
     },
     []
@@ -42,6 +45,7 @@ export default function CalendarView({
   // Expose a refresh function to the parent
   const handleDatesSet = useCallback(
     (_arg: DatesSetArg) => {
+      setCalendarError(null);
       refreshRef.current = () => {
         calendarRef.current?.getApi().refetchEvents();
       };
@@ -71,12 +75,9 @@ export default function CalendarView({
   );
 
   const renderEventContent = useCallback((arg: EventContentArg) => {
-    const isWatched = arg.event.classNames.includes("watched-event");
     return (
       <div
-        className={`px-1.5 py-0.5 rounded text-xs font-medium truncate w-full ${
-          isWatched ? "opacity-50 line-through" : ""
-        }`}
+        className="px-1.5 py-0.5 rounded text-xs font-medium truncate w-full"
         style={{ color: arg.event.textColor ?? "#fff" }}
         title={arg.event.title}
       >
@@ -104,7 +105,7 @@ export default function CalendarView({
         aspectRatio={1.8}
         eventDisplay="block"
         dayMaxEvents={3}
-        moreLinkClassNames="text-indigo-400 hover:text-indigo-300 text-xs font-medium"
+        moreLinkClassNames="text-[var(--accent-hover)] hover:text-[var(--accent)] text-xs font-medium"
         nowIndicator
         buttonText={{
           today: "Today",
@@ -123,15 +124,19 @@ export default function CalendarView({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p className="font-medium text-[var(--text-secondary)] text-sm">No episodes this period</p>
+            <p className="font-medium text-[var(--text-secondary)] text-sm">Nothing airing this period</p>
             <p className="text-xs mt-1 text-[var(--text-dim)]">
-              Add shows from the{" "}
-              <a href="/browse" className="text-indigo-400 hover:underline">Browse</a>{" "}
-              page
+              <a href="/browse" className="text-[var(--accent-hover)] hover:underline">Add more shows</a>{" "}
+              to fill your calendar
             </p>
           </div>
         )}
       />
+      {calendarError && (
+        <div className="mt-3 p-3 bg-[var(--danger)]/10 border border-[var(--danger)]/25 rounded-xl text-[var(--danger)] text-sm text-center">
+          {calendarError}
+        </div>
+      )}
     </div>
   );
 }

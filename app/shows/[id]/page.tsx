@@ -39,14 +39,9 @@ export default function ShowDetailPage({
   const [show, setShow] = useState<Show | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Track which episodes are watched locally for instant UI feedback
   const [watchedIds, setWatchedIds] = useState<Set<number>>(new Set());
-  // Track pending operations to show loading state
   const [pendingIds, setPendingIds] = useState<Set<string>>(new Set());
-  // Collapsed seasons
-  const [collapsedSeasons, setCollapsedSeasons] = useState<Set<number>>(
-    new Set()
-  );
+  const [collapsedSeasons, setCollapsedSeasons] = useState<Set<number>>(new Set());
   const [archived, setArchived] = useState(false);
   const [archivePending, setArchivePending] = useState(false);
 
@@ -59,7 +54,6 @@ export default function ShowDetailPage({
       const data = await res.json();
       setShow(data.show);
       setArchived(data.show.archived ?? false);
-      // Seed watched state from DB
       const watched = new Set<number>();
       for (const ep of data.show.episodes as Episode[]) {
         if (ep.watchedEpisodes.length > 0) watched.add(ep.id);
@@ -73,16 +67,11 @@ export default function ShowDetailPage({
     }
   }, [id]);
 
-  useEffect(() => {
-    loadShow();
-  }, [loadShow]);
-
-  // --- Watch helpers ---
+  useEffect(() => { loadShow(); }, [loadShow]);
 
   const bulkUpdate = useCallback(
     async (episodeIds: number[], watched: boolean, pendingKey: string) => {
       setPendingIds((prev) => new Set(prev).add(pendingKey));
-      // Optimistic update
       setWatchedIds((prev) => {
         const next = new Set(prev);
         if (watched) episodeIds.forEach((id) => next.add(id));
@@ -97,7 +86,6 @@ export default function ShowDetailPage({
         });
         if (!res.ok) throw new Error("Failed to update");
       } catch {
-        // Revert on failure
         setWatchedIds((prev) => {
           const next = new Set(prev);
           if (watched) episodeIds.forEach((id) => next.delete(id));
@@ -116,21 +104,15 @@ export default function ShowDetailPage({
   );
 
   const toggleEpisode = useCallback(
-    (ep: Episode) => {
-      const isWatched = watchedIds.has(ep.id);
-      bulkUpdate([ep.id], !isWatched, `ep-${ep.id}`);
-    },
+    (ep: Episode) => bulkUpdate([ep.id], !watchedIds.has(ep.id), `ep-${ep.id}`),
     [watchedIds, bulkUpdate]
   );
 
   const toggleSeason = useCallback(
     (seasonNumber: number, episodes: Episode[]) => {
       const today = new Date().toISOString().slice(0, 10);
-      const airedIds = episodes
-        .filter((e) => e.aired && e.aired <= today)
-        .map((e) => e.id);
+      const airedIds = episodes.filter((e) => e.aired && e.aired <= today).map((e) => e.id);
       const allWatched = airedIds.every((id) => watchedIds.has(id));
-      // When unwatching, include all (even unaired) so they can be cleared
       const ids = allWatched ? episodes.map((e) => e.id) : airedIds;
       if (ids.length === 0) return;
       bulkUpdate(ids, !allWatched, `season-${seasonNumber}`);
@@ -141,11 +123,8 @@ export default function ShowDetailPage({
   const toggleShow = useCallback(() => {
     if (!show) return;
     const today = new Date().toISOString().slice(0, 10);
-    const airedIds = show.episodes
-      .filter((e) => e.aired && e.aired <= today)
-      .map((e) => e.id);
+    const airedIds = show.episodes.filter((e) => e.aired && e.aired <= today).map((e) => e.id);
     const allWatched = airedIds.every((id) => watchedIds.has(id));
-    // When unwatching, include all episodes so nothing is left marked
     const ids = allWatched ? show.episodes.map((e) => e.id) : airedIds;
     if (ids.length === 0) return;
     bulkUpdate(ids, !allWatched, "show");
@@ -179,8 +158,6 @@ export default function ShowDetailPage({
     });
   };
 
-  // --- Derived data ---
-
   const seasons: SeasonMap = new Map();
   if (show) {
     for (const ep of show.episodes) {
@@ -193,16 +170,15 @@ export default function ShowDetailPage({
   const today = new Date().toISOString().slice(0, 10);
   const totalEpisodes = show?.episodes.length ?? 0;
   const airedEpisodes = show?.episodes.filter((e) => e.aired && e.aired <= today) ?? [];
-  const watchedCount = show
-    ? show.episodes.filter((e) => watchedIds.has(e.id)).length
-    : 0;
-  const progress =
-    totalEpisodes > 0 ? Math.round((watchedCount / totalEpisodes) * 100) : 0;
-  // "All watched" means all *aired* episodes are watched
-  const allWatched =
-    airedEpisodes.length > 0 && airedEpisodes.every((e) => watchedIds.has(e.id));
+  const watchedCount = show ? show.episodes.filter((e) => watchedIds.has(e.id)).length : 0;
+  const progress = totalEpisodes > 0 ? Math.round((watchedCount / totalEpisodes) * 100) : 0;
+  const allWatched = airedEpisodes.length > 0 && airedEpisodes.every((e) => watchedIds.has(e.id));
+  const color = show ? getShowColor(show.name) : "var(--accent)";
 
-  const color = show ? getShowColor(show.name) : "#6366f1";
+  const statusColor =
+    show?.status === "Continuing" ? "text-[var(--status-continuing)]"
+    : show?.status === "Ended"    ? "text-[var(--status-ended)]"
+    : "text-[var(--text-dim)]";
 
   if (isLoading) {
     return (
@@ -221,11 +197,8 @@ export default function ShowDetailPage({
   if (error || !show) {
     return (
       <div className="max-w-4xl mx-auto text-center py-20">
-        <p className="text-red-400 mb-4">{error ?? "Show not found"}</p>
-        <Link
-          href="/shows"
-          className="text-indigo-400 hover:underline text-sm"
-        >
+        <p className="text-[var(--danger)] mb-4">{error ?? "Show not found"}</p>
+        <Link href="/shows" className="text-[var(--accent)] hover:text-[var(--accent-hover)] hover:underline text-sm transition-colors">
           ← Back to My Shows
         </Link>
       </div>
@@ -237,31 +210,25 @@ export default function ShowDetailPage({
       {/* Back link */}
       <Link
         href="/shows"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors mb-6"
+        className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-6"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
         My Shows
       </Link>
 
       {/* Show header */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden mb-6">
+      <div className="card overflow-hidden mb-6">
         <div className="h-1 w-full" style={{ backgroundColor: color }} />
         <div className="p-5 flex gap-5">
           {/* Poster */}
-          <div className="relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-gray-800">
+          <div className="relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-[var(--bg-elevated)]">
             {show.posterUrl ? (
-              <Image
-                src={show.posterUrl}
-                alt={show.name}
-                fill
-                className="object-cover"
-                sizes="96px"
-              />
+              <Image src={show.posterUrl} alt={show.name} fill className="object-cover" sizes="96px" />
             ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="poster-placeholder w-full h-full">
+                <svg aria-hidden="true" className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
                 </svg>
               </div>
@@ -271,39 +238,29 @@ export default function ShowDetailPage({
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-xl font-bold text-white leading-tight">{show.name}</h1>
+              <h1 className="text-xl font-bold text-[var(--text-primary)] leading-tight">{show.name}</h1>
               {archived && (
-                <span className="text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded">
+                <span className="text-xs font-medium text-[var(--warn)] bg-[var(--warn)]/10 border border-[var(--warn)]/20 px-2 py-0.5 rounded">
                   Archived
                 </span>
               )}
             </div>
             <div className="flex flex-wrap gap-2 mt-1.5 mb-3">
               {show.network && (
-                <span className="text-xs text-gray-400 bg-gray-800 px-2 py-0.5 rounded">
+                <span className="text-xs text-[var(--text-secondary)] bg-[var(--bg-elevated)] px-2 py-0.5 rounded">
                   {show.network}
                 </span>
               )}
               {show.status && (
-                <span
-                  className={`text-xs font-medium ${
-                    show.status === "Continuing"
-                      ? "text-green-400"
-                      : show.status === "Ended"
-                      ? "text-red-400"
-                      : "text-gray-500"
-                  }`}
-                >
-                  {show.status}
-                </span>
+                <span className={`text-xs font-medium ${statusColor}`}>{show.status}</span>
               )}
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-[var(--text-secondary)]">
                 {sortedSeasons.length} season{sortedSeasons.length !== 1 ? "s" : ""}
               </span>
             </div>
 
             {show.overview && (
-              <p className="text-sm text-gray-400 leading-relaxed line-clamp-3 mb-3">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3 mb-3">
                 {show.overview}
               </p>
             )}
@@ -311,14 +268,12 @@ export default function ShowDetailPage({
             {/* Progress bar */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-[var(--text-secondary)]">
                   {watchedCount} / {totalEpisodes} episodes watched
                 </span>
-                <span className="text-xs font-semibold" style={{ color }}>
-                  {progress}%
-                </span>
+                <span className="text-xs font-semibold" style={{ color }}>{progress}%</span>
               </div>
-              <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden w-full">
+              <div className="h-1.5 bg-[var(--bg-elevated)] rounded-full overflow-hidden w-full">
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{ width: `${progress}%`, backgroundColor: color }}
@@ -334,22 +289,22 @@ export default function ShowDetailPage({
               disabled={pendingIds.has("show")}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed ${
                 allWatched
-                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                  ? "bg-[var(--bg-overlay)] hover:bg-[var(--border-hover)] text-[var(--text-primary)]"
                   : "text-white hover:opacity-90"
               }`}
               style={!allWatched ? { backgroundColor: color } : undefined}
             >
               {pendingIds.has("show") ? (
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               ) : allWatched ? (
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               ) : (
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               )}
@@ -358,15 +313,15 @@ export default function ShowDetailPage({
             <button
               onClick={toggleArchive}
               disabled={archivePending}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--bg-elevated)] hover:bg-[var(--bg-overlay)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             >
               {archivePending ? (
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
               ) : (
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                 </svg>
               )}
@@ -383,61 +338,45 @@ export default function ShowDetailPage({
           const seasonAiredIds = episodes
             .filter((e) => e.aired && e.aired <= today)
             .map((e) => e.id);
-          const seasonWatchedCount = seasonIds.filter((id) =>
-            watchedIds.has(id)
-          ).length;
-          // Button state based on aired episodes only
+          const seasonWatchedCount = seasonIds.filter((id) => watchedIds.has(id)).length;
           const seasonAllWatched =
-            seasonAiredIds.length > 0 &&
-            seasonAiredIds.every((id) => watchedIds.has(id));
+            seasonAiredIds.length > 0 && seasonAiredIds.every((id) => watchedIds.has(id));
           const seasonProgress =
-            seasonIds.length > 0
-              ? Math.round((seasonWatchedCount / seasonIds.length) * 100)
-              : 0;
+            seasonIds.length > 0 ? Math.round((seasonWatchedCount / seasonIds.length) * 100) : 0;
           const isCollapsed = collapsedSeasons.has(seasonNumber);
           const seasonPendingKey = `season-${seasonNumber}`;
 
           return (
-            <div
-              key={seasonNumber}
-              className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden"
-            >
+            <div key={seasonNumber} className="card overflow-hidden">
               {/* Season header */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-800/60">
-                {/* Collapse toggle */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--border)]/60">
+                {/* Collapse toggle + season info */}
                 <button
                   onClick={() => toggleSeasonCollapsed(seasonNumber)}
-                  className="text-gray-500 hover:text-gray-300 transition-colors flex-shrink-0"
-                  aria-label={isCollapsed ? "Expand season" : "Collapse season"}
+                  aria-expanded={!isCollapsed}
+                  aria-controls={`season-${seasonNumber}-episodes`}
+                  className="flex-1 flex items-center gap-3 text-left min-w-0"
                 >
                   <svg
-                    className={`w-4 h-4 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
+                    aria-hidden="true"
+                    className={`w-4 h-4 text-[var(--text-dim)] flex-shrink-0 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
-                </button>
-
-                <button
-                  onClick={() => toggleSeasonCollapsed(seasonNumber)}
-                  className="flex-1 flex items-center gap-3 text-left min-w-0"
-                >
-                  <span className="font-semibold text-white text-sm">
+                  <span className="font-semibold text-[var(--text-primary)] text-sm">
                     {seasonNumber === 0 ? "Specials" : `Season ${seasonNumber}`}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-[var(--text-secondary)]">
                     {seasonWatchedCount}/{seasonIds.length} watched
                   </span>
                   {/* Season progress bar */}
-                  <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden hidden sm:block">
+                  <div className="flex-1 h-1 bg-[var(--bg-elevated)] rounded-full overflow-hidden hidden sm:block">
                     <div
                       className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${seasonProgress}%`,
-                        backgroundColor: color,
-                      }}
+                      style={{ width: `${seasonProgress}%`, backgroundColor: color }}
                     />
                   </div>
                 </button>
@@ -448,21 +387,21 @@ export default function ShowDetailPage({
                   disabled={pendingIds.has(seasonPendingKey)}
                   className={`flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed ${
                     seasonAllWatched
-                      ? "bg-gray-700 hover:bg-gray-600 text-gray-400"
-                      : "bg-gray-800 hover:bg-gray-700 text-gray-300"
+                      ? "bg-[var(--bg-overlay)] hover:bg-[var(--border-hover)] text-[var(--text-secondary)]"
+                      : "bg-[var(--bg-elevated)] hover:bg-[var(--bg-overlay)] text-[var(--text-primary)]"
                   }`}
                 >
                   {pendingIds.has(seasonPendingKey) ? (
-                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                   ) : seasonAllWatched ? (
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   ) : (
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   )}
@@ -471,81 +410,81 @@ export default function ShowDetailPage({
               </div>
 
               {/* Episodes list */}
-              {!isCollapsed && (
-                <div className="divide-y divide-gray-800/40">
-                  {episodes.map((ep) => {
-                    const isWatched = watchedIds.has(ep.id);
-                    const isPending = pendingIds.has(`ep-${ep.id}`);
+              <div
+                id={`season-${seasonNumber}-episodes`}
+                hidden={isCollapsed}
+                className="divide-y divide-[var(--border)]/40"
+              >
+                {episodes.map((ep) => {
+                  const isWatched = watchedIds.has(ep.id);
+                  const isPending = pendingIds.has(`ep-${ep.id}`);
 
-                    return (
-                      <div
-                        key={ep.id}
-                        className={`flex items-center gap-3 px-4 py-3 hover:bg-gray-800/40 transition-colors ${
-                          isWatched ? "opacity-60" : ""
+                  return (
+                    <div
+                      key={ep.id}
+                      className={`flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-elevated)]/40 transition-colors ${
+                        isWatched ? "opacity-60" : ""
+                      }`}
+                    >
+                      {/* Watch checkbox */}
+                      <button
+                        onClick={() => toggleEpisode(ep)}
+                        disabled={isPending}
+                        className="flex-shrink-0 disabled:cursor-not-allowed"
+                        aria-label={isWatched ? "Mark as unwatched" : "Mark as watched"}
+                      >
+                        {isPending ? (
+                          <svg aria-hidden="true" className="w-5 h-5 animate-spin text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                        ) : isWatched ? (
+                          <div
+                            className="w-5 h-5 rounded-full flex items-center justify-center"
+                            style={{ backgroundColor: color }}
+                          >
+                            <svg aria-hidden="true" className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-[var(--border-hover)] hover:border-[var(--text-secondary)] transition-colors" />
+                        )}
+                      </button>
+
+                      {/* Episode code */}
+                      <span className="ep-code flex-shrink-0 w-14">
+                        {formatEpisodeCode(ep.seasonNumber, ep.episodeNumber)}
+                      </span>
+
+                      {/* Episode name */}
+                      <span
+                        className={`flex-1 text-sm min-w-0 truncate ${
+                          isWatched
+                            ? "line-through text-[var(--text-dim)]"
+                            : "text-[var(--text-primary)]"
                         }`}
                       >
-                        {/* Watch checkbox */}
-                        <button
-                          onClick={() => toggleEpisode(ep)}
-                          disabled={isPending}
-                          className="flex-shrink-0 disabled:cursor-not-allowed"
-                          aria-label={
-                            isWatched ? "Mark as unwatched" : "Mark as watched"
-                          }
-                        >
-                          {isPending ? (
-                            <svg className="w-5 h-5 animate-spin text-gray-500" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                            </svg>
-                          ) : isWatched ? (
-                            <div
-                              className="w-5 h-5 rounded-full flex items-center justify-center"
-                              style={{ backgroundColor: color }}
-                            >
-                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-gray-700 hover:border-gray-500 transition-colors" />
-                          )}
-                        </button>
+                        {ep.name ?? `Episode ${ep.episodeNumber}`}
+                      </span>
 
-                        {/* Episode code */}
-                        <span className="text-xs font-mono text-gray-500 flex-shrink-0 w-14">
-                          {formatEpisodeCode(ep.seasonNumber, ep.episodeNumber)}
+                      {/* Air date */}
+                      {ep.aired && (
+                        <span className="text-xs text-[var(--text-dim)] flex-shrink-0 hidden sm:block">
+                          {formatAirDate(ep.aired)}
                         </span>
+                      )}
 
-                        {/* Episode name */}
-                        <span
-                          className={`flex-1 text-sm min-w-0 truncate ${
-                            isWatched
-                              ? "line-through text-gray-500"
-                              : "text-gray-200"
-                          }`}
-                        >
-                          {ep.name ?? `Episode ${ep.episodeNumber}`}
+                      {/* Runtime */}
+                      {ep.runtime && (
+                        <span className="text-xs text-[var(--text-dim)] flex-shrink-0">
+                          {ep.runtime}m
                         </span>
-
-                        {/* Air date */}
-                        {ep.aired && (
-                          <span className="text-xs text-gray-600 flex-shrink-0 hidden sm:block">
-                            {formatAirDate(ep.aired)}
-                          </span>
-                        )}
-
-                        {/* Runtime */}
-                        {ep.runtime && (
-                          <span className="text-xs text-gray-600 flex-shrink-0">
-                            {ep.runtime}m
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           );
         })}

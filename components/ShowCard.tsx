@@ -31,16 +31,16 @@ export default function ShowCard({
 }: ShowCardProps) {
   const statusColor =
     status === "Continuing"
-      ? "text-emerald-400"
+      ? "text-[var(--status-continuing)]"
       : status === "Ended"
-      ? "text-rose-400/70"
+      ? "text-[var(--status-ended)]"
       : "text-[var(--text-dim)]";
 
   const statusDot =
     status === "Continuing"
-      ? "bg-emerald-400"
+      ? "bg-[var(--status-continuing)]"
       : status === "Ended"
-      ? "bg-rose-400/70"
+      ? "bg-[var(--status-ended)]"
       : "bg-[var(--text-dim)]";
 
   return (
@@ -57,7 +57,7 @@ export default function ShowCard({
           />
         ) : (
           <div className="poster-placeholder w-full h-full">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                 d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
             </svg>
@@ -106,7 +106,7 @@ export default function ShowCard({
             {isLoading ? (
               <Spinner />
             ) : (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
@@ -122,7 +122,7 @@ export default function ShowCard({
             {isLoading ? (
               <Spinner />
             ) : (
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
             )}

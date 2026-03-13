@@ -19,7 +19,7 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "TV Show Library",
+  title: "Episode Calendar",
   description: "Track your favorite TV shows and never miss an episode",
 };
 
@@ -31,6 +31,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${syne.variable} ${dmSans.variable}`}>
       <body className="min-h-screen bg-[var(--bg-base)] text-[var(--text-primary)] font-sans antialiased">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-[var(--accent)] focus:text-white focus:rounded-lg focus:text-sm focus:font-medium focus:shadow-lg"
+        >
+          Skip to main content
+        </a>
         <div className="flex flex-col min-h-screen">
           {/* Top header */}
           <header className="sticky top-0 z-40 header-glass border-b border-[var(--border)]">
@@ -41,13 +47,13 @@ export default function RootLayout({
                   href="/"
                   className="flex items-center gap-2.5 group"
                 >
-                  <div className="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center group-hover:bg-indigo-600/30 transition-colors">
-                    <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/20 border border-[var(--accent)]/30 flex items-center justify-center group-hover:bg-[var(--accent)]/30 transition-colors">
+                    <svg aria-hidden="true" className="w-4 h-4 text-[var(--accent-hover)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
                     </svg>
                   </div>
-                  <span className="font-display font-bold text-lg text-white tracking-tight group-hover:text-indigo-200 transition-colors">
-                    TV Show Library
+                  <span className="font-display font-bold text-lg text-white tracking-tight group-hover:text-[var(--accent-hover)] transition-colors">
+                    Episode Calendar
                   </span>
                 </Link>
 
@@ -58,7 +64,7 @@ export default function RootLayout({
           </header>
 
           {/* Main content — extra bottom padding on mobile for the bottom nav */}
-          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 md:py-8 pb-24 md:pb-8">
+          <main id="main-content" className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 md:py-8 pb-24 md:pb-8">
             {children}
           </main>
 
@@ -71,7 +77,7 @@ export default function RootLayout({
                   href="https://thetvdb.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-indigo-500 hover:text-indigo-400 transition-colors"
+                  className="text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
                 >
                   TVDB
                 </a>

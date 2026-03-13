@@ -35,6 +35,9 @@ interface EpisodeModalProps {
   isUpdating: boolean;
 }
 
+const FOCUSABLE =
+  'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 export default function EpisodeModal({
   event,
   onClose,
@@ -42,7 +45,9 @@ export default function EpisodeModal({
   isUpdating,
 }: EpisodeModalProps) {
   const backdropRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
+  // ESC to close
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -51,6 +56,44 @@ export default function EpisodeModal({
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
+  // Focus trap: auto-focus first element, cycle Tab/Shift+Tab within panel
+  useEffect(() => {
+    if (!event) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const getFocusable = () =>
+      Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE));
+
+    // Defer so the panel is fully painted
+    const timer = setTimeout(() => getFocusable()[0]?.focus(), 10);
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const focusable = getFocusable();
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleTab);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("keydown", handleTab);
+    };
+  }, [event]);
+
+  // Prevent body scroll while open
   useEffect(() => {
     if (event) {
       document.body.style.overflow = "hidden";
@@ -73,7 +116,13 @@ export default function EpisodeModal({
       onClick={handleBackdropClick}
     >
       {/* Sheet on mobile, centered card on sm+ */}
-      <div className="modal-panel w-full sm:max-w-md fade-up">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="episode-modal-title"
+        className="modal-panel w-full sm:max-w-md fade-up"
+      >
         {/* Color accent bar */}
         <div className="h-1 w-full" style={{ backgroundColor: event.color }} />
 
@@ -98,7 +147,10 @@ export default function EpisodeModal({
               <p className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-widest mb-0.5 truncate">
                 {event.showName}
               </p>
-              <h2 className="font-display text-base font-bold text-[var(--text-primary)] leading-snug">
+              <h2
+                id="episode-modal-title"
+                className="font-display text-base font-bold text-[var(--text-primary)] leading-snug"
+              >
                 {event.name || `Episode ${event.episodeNumber}`}
               </h2>
             </div>
@@ -109,7 +161,7 @@ export default function EpisodeModal({
               className="flex-shrink-0 w-8 h-8 rounded-lg bg-[var(--bg-overlay)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--border-hover)] transition-all ml-1"
               aria-label="Close"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -125,7 +177,7 @@ export default function EpisodeModal({
             </span>
             {event.aired && (
               <span className="inline-flex items-center gap-1 text-xs text-[var(--text-secondary)]">
-                <svg className="w-3 h-3 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-3 h-3 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 {formatAirDate(event.aired)}
@@ -136,7 +188,7 @@ export default function EpisodeModal({
             )}
             {event.runtime && (
               <span className="inline-flex items-center gap-1 text-xs text-[var(--text-secondary)]">
-                <svg className="w-3 h-3 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-3 h-3 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 {event.runtime}m
@@ -160,7 +212,7 @@ export default function EpisodeModal({
           {/* Watched info */}
           {event.watched && event.watchedAt && (
             <div className="flex items-center gap-1.5 mb-3 text-xs text-[var(--watched)] bg-[var(--watched-dim)] border border-[var(--watched)]/20 rounded-lg px-3 py-2">
-              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               Watched on{" "}
@@ -176,6 +228,7 @@ export default function EpisodeModal({
           <button
             onClick={() => onToggleWatch(event)}
             disabled={isUpdating}
+            aria-busy={isUpdating}
             className={`w-full py-2.5 px-4 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
               event.watched
                 ? "bg-[var(--bg-overlay)] hover:bg-[var(--border-hover)] text-[var(--text-secondary)]"
@@ -184,20 +237,20 @@ export default function EpisodeModal({
             style={!event.watched ? { backgroundColor: event.color } : undefined}
           >
             {isUpdating ? (
-              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
             ) : event.watched ? (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
                 Mark as Unwatched
               </>
             ) : (
               <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
                 Mark as Watched

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import ShowCard from "@/components/ShowCard";
 
 interface SearchResult {
@@ -20,6 +21,7 @@ interface TrackedShow {
 }
 
 export default function BrowsePage() {
+  const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [trackedShows, setTrackedShows] = useState<TrackedShow[]>([]);
@@ -61,6 +63,15 @@ export default function BrowsePage() {
     }
   }, []);
 
+  // Pre-fill and auto-trigger search from URL ?q= param (deep-link from Trends)
+  useEffect(() => {
+    const q = searchParams.get("q");
+    if (q) {
+      setQuery(q);
+      performSearch(q);
+    }
+  }, [searchParams, performSearch]);
+
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
@@ -95,7 +106,7 @@ export default function BrowsePage() {
       ]);
     } catch (err) {
       console.error("Add show error:", err);
-      alert(err instanceof Error ? err.message : "Failed to add show");
+      setError(err instanceof Error ? err.message : "Failed to add show");
     } finally {
       setLoadingIds((prev) => {
         const next = new Set(prev);
@@ -117,7 +128,7 @@ export default function BrowsePage() {
       setTrackedShows((prev) => prev.filter((s) => s.tvdbId !== tvdbId));
     } catch (err) {
       console.error("Remove show error:", err);
-      alert("Failed to remove show");
+      setError("Failed to remove show. Please try again.");
     } finally {
       setLoadingIds((prev) => {
         const next = new Set(prev);
@@ -132,38 +143,41 @@ export default function BrowsePage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-5">
-        <h1 className="font-display font-bold text-[var(--text-primary)]">Browse Shows</h1>
+        <h1 className="font-extrabold text-[var(--text-primary)]">Browse Shows</h1>
         <p className="section-subtitle">Search and add shows to your watchlist</p>
       </div>
 
       {/* Search input */}
       <div className="relative mb-5">
+        <label htmlFor="browse-search" className="sr-only">Search TV shows</label>
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
           {isSearching ? (
-            <svg className="w-4 h-4 text-[var(--text-secondary)] animate-spin" fill="none" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="w-4 h-4 text-[var(--text-secondary)] animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           ) : (
-            <svg className="w-4 h-4 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="w-4 h-4 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           )}
         </div>
         <input
+          id="browse-search"
           type="text"
           value={query}
           onChange={handleQueryChange}
           placeholder="Search TV shows…"
-          className="search-input"
+          className="search-input pl-10 pr-9 py-2.5"
           autoFocus
         />
         {query && (
           <button
             onClick={() => { setQuery(""); setResults([]); setHasSearched(false); }}
+            aria-label="Clear search"
             className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[var(--text-dim)] hover:text-[var(--text-secondary)] transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -172,7 +186,7 @@ export default function BrowsePage() {
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/25 rounded-xl text-rose-400 text-sm">
+        <div className="mb-4 p-3 bg-[var(--danger)]/10 border border-[var(--danger)]/25 rounded-xl text-[var(--danger)] text-sm">
           {error}
         </div>
       )}
@@ -211,12 +225,12 @@ export default function BrowsePage() {
       {!hasSearched && (
         <div className="text-center py-20 text-[var(--text-dim)]">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border)] flex items-center justify-center">
-            <svg className="w-7 h-7 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="w-7 h-7 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <p className="font-display font-semibold text-[var(--text-secondary)] text-base">Find your next show</p>
-          <p className="text-sm mt-1">Start typing to search the TVDB catalogue</p>
+          <p className="font-display font-semibold text-[var(--text-secondary)] text-base">Find your next obsession</p>
+          <p className="text-sm mt-1">Search thousands of shows across every network and streaming platform</p>
         </div>
       )}
     </div>

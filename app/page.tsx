@@ -23,6 +23,7 @@ function CalendarSkeleton() {
 export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   // Used to force CalendarView to refresh after a watch toggle
   const refreshRef = useRef<() => void>(() => {});
 
@@ -51,6 +52,7 @@ export default function CalendarPage() {
         refreshRef.current();
       } catch (error) {
         console.error("Failed to toggle watch status:", error);
+        setError("Failed to update watch status. Please try again.");
       } finally {
         setIsUpdating(false);
       }
@@ -60,24 +62,26 @@ export default function CalendarPage() {
 
   return (
     <div>
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display font-bold text-[var(--text-primary)]">Episode Calendar</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-0.5">
-            All upcoming episodes from your watchlist
-          </p>
-        </div>
-        <div className="flex-shrink-0 flex items-center gap-3 text-xs text-[var(--text-dim)] bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg px-3 py-2">
+      <div className="mb-3 flex items-center justify-between">
+        <h1 className="text-sm font-medium text-[var(--text-secondary)]">Episode Calendar</h1>
+        <div className="flex items-center gap-3 text-xs text-[var(--text-dim)]">
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-indigo-500 inline-block" />
+            <span className="w-2 h-2 rounded-sm bg-[var(--accent)] inline-block" />
             Upcoming
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-indigo-500/35 inline-block" />
+            <span className="w-2 h-2 rounded-sm bg-[var(--accent)]/35 inline-block" />
             Watched
           </span>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-[var(--danger)]/10 border border-[var(--danger)]/25 rounded-xl text-[var(--danger)] text-sm p-3 mb-3 flex items-center justify-between gap-3">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="shrink-0 font-medium hover:opacity-70">Dismiss</button>
+        </div>
+      )}
 
       <FullCalendarWrapper
         onEventClick={handleEventClick}

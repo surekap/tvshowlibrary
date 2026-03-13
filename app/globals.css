@@ -13,30 +13,39 @@
   /* Borders */
   --border:          #222236;
   --border-hover:    #333352;
-  --border-active:   #4f4fb0;
+  --border-active:   #7e22ce;
 
   /* Text */
   --text-primary:    #eeeef8;
   --text-secondary:  #8888a8;
   --text-dim:        #44445c;
 
-  /* Accent — vivid indigo */
-  --accent:          #6366f1;
-  --accent-hover:    #818cf8;
-  --accent-dim:      rgba(99, 102, 241, 0.14);
-  --accent-glow:     rgba(99, 102, 241, 0.25);
+  /* Accent — cinematic purple */
+  --accent:          #9333ea;
+  --accent-hover:    #a855f7;
+  --accent-dim:      rgba(147, 51, 234, 0.14);
+  --accent-glow:     rgba(147, 51, 234, 0.25);
 
   /* Status */
-  --watched:         #22d3a5;
-  --watched-dim:     rgba(34, 211, 165, 0.12);
-  --danger:          #f87171;
-  --warn:            #fbbf24;
+  --watched:             #22d3a5;
+  --watched-dim:         rgba(34, 211, 165, 0.12);
+  --danger:              #f87171;
+  --warn:                #fbbf24;
+
+  /* Show status — single source of truth */
+  --status-continuing:   #22d3a5; /* same as --watched — active/airing */
+  --status-ended:        rgba(248, 113, 113, 0.65); /* muted --danger */
+
+  /* Rank podium */
+  --rank-gold:           #f59e0b;
+  --rank-silver:         #9ba3af;
+  --rank-bronze:         #c97c3a;
 
   /* Shadows */
   --shadow-sm:       0 1px 3px rgba(0,0,0,0.4);
   --shadow-md:       0 4px 16px rgba(0,0,0,0.5);
   --shadow-lg:       0 12px 40px rgba(0,0,0,0.6);
-  --shadow-glow:     0 0 24px rgba(99, 102, 241, 0.2);
+  --shadow-glow:     0 0 24px rgba(147, 51, 234, 0.2);
 }
 
 /* ─── Base Styles ────────────────────────────────────────────────────────── */
@@ -424,7 +433,9 @@ h3 { font-size: clamp(1rem, 2vw, 1.125rem); font-weight: 600; }
 }
 
 .fc .fc-event.watched-event {
-  opacity: 0.4;
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--border-hover) !important;
+  color: var(--text-dim) !important;
   text-decoration: line-through;
 }
 
@@ -497,4 +508,41 @@ h3 { font-size: clamp(1rem, 2vw, 1.125rem); font-weight: 600; }
     min-height: 40px;
     min-width: 40px;
   }
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Screen Reader Only ─────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus,
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
 }
