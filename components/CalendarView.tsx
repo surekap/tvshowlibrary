@@ -61,7 +61,7 @@ export default function CalendarView({
       >;
       const calEvent: CalendarEvent = {
         ...eventData,
-        id: eventData.id,
+        id: arg.event.id,
         title: arg.event.title,
         start: arg.event.startStr,
         backgroundColor: arg.event.backgroundColor,
