@@ -7,10 +7,11 @@ import { eq } from "drizzle-orm";
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const episodeId = parseInt(params.id, 10);
+    const { id: idStr } = await params;
+    const episodeId = parseInt(idStr, 10);
 
     if (isNaN(episodeId)) {
       return NextResponse.json(
@@ -57,10 +58,11 @@ export async function POST(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const episodeId = parseInt(params.id, 10);
+    const { id: idStr } = await params;
+    const episodeId = parseInt(idStr, 10);
 
     if (isNaN(episodeId)) {
       return NextResponse.json(

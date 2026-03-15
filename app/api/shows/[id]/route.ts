@@ -7,10 +7,11 @@ import { eq } from "drizzle-orm";
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
+    const { id: idStr } = await params;
+    const id = parseInt(idStr, 10);
 
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid show ID" }, { status: 400 });
@@ -39,10 +40,11 @@ export async function DELETE(
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
+    const { id: idStr } = await params;
+    const id = parseInt(idStr, 10);
 
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid show ID" }, { status: 400 });
@@ -79,10 +81,11 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id, 10);
+    const { id: idStr } = await params;
+    const id = parseInt(idStr, 10);
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid show ID" }, { status: 400 });
     }

@@ -9,10 +9,11 @@ import { eq, inArray } from "drizzle-orm";
 // Body: { episodeIds: number[], watched: boolean }
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const showId = parseInt(params.id, 10);
+    const { id: idStr } = await params;
+    const showId = parseInt(idStr, 10);
     if (isNaN(showId)) {
       return NextResponse.json({ error: "Invalid show ID" }, { status: 400 });
     }
