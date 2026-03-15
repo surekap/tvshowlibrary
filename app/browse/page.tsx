@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import ShowCard from "@/components/ShowCard";
 
@@ -20,7 +20,7 @@ interface TrackedShow {
   name: string;
 }
 
-export default function BrowsePage() {
+function BrowseContent() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -234,5 +234,13 @@ export default function BrowsePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function BrowsePage() {
+  return (
+    <Suspense>
+      <BrowseContent />
+    </Suspense>
   );
 }
