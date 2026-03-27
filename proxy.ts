@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Bypass auth entirely on localhost in development.
   // API routes use getCurrentUserId() which falls back to the first DB user in dev mode.
   const host = request.headers.get("host") ?? "";
