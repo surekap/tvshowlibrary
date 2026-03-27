@@ -11,10 +11,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const secureCookie = process.env.NEXTAUTH_URL?.startsWith("https://") ?? true;
-  const cookieName = secureCookie
-    ? "__Secure-next-auth.session-token"
-    : "next-auth.session-token";
+  // The localhost dev bypass above means every request reaching this point
+  // is running on the production HTTPS deployment. Always use the secure
+  // cookie name (__Secure- prefix) that NextAuth sets on HTTPS.
+  const secureCookie = true;
+  const cookieName = "__Secure-next-auth.session-token";
   const hasCookie = request.cookies.has(cookieName);
 
   console.log("[proxy]", request.nextUrl.pathname, {
