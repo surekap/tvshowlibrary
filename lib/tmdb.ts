@@ -142,6 +142,22 @@ export async function getTopRated(): Promise<TopRatedItem[]> {
   return data.results.slice(0, 20).map(mapToTmdbShow);
 }
 
+/**
+ * Fetches TMDB show details and external IDs in a single call.
+ * Returns voteAverage and imdbId (null if not available).
+ */
+export async function getShowTmdbDetails(
+  tmdbId: number
+): Promise<{ imdbId: string | null; voteAverage: number }> {
+  const data = (await tmdbFetch(
+    `/tv/${tmdbId}?append_to_response=external_ids`
+  )) as { vote_average: number; external_ids?: { imdb_id?: string | null } };
+  return {
+    imdbId: data.external_ids?.imdb_id ?? null,
+    voteAverage: data.vote_average ?? 0,
+  };
+}
+
 /** Resolves a TVDB series ID to a TMDB ID. Returns null if not found. */
 export async function findByTvdbId(tvdbId: number): Promise<number | null> {
   try {

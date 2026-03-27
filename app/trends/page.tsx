@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import type { TmdbShow, TrendItem, NewShowItem, TopRatedItem, RecommendedItem } from "@/lib/tmdb";
+import ExternalLinks from "@/components/ExternalLinks";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -84,13 +85,16 @@ function CompactCard({
         </div>
       </div>
 
-      {/* Track */}
-      <Link
-        href={`/browse?q=${encodeURIComponent(show.name)}`}
-        className="flex-shrink-0 text-[10px] font-medium text-[var(--accent-hover)] hover:text-[var(--accent)] hover:underline transition-colors"
-      >
-        + Track
-      </Link>
+      {/* Track + links */}
+      <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
+        <Link
+          href={`/browse?q=${encodeURIComponent(show.name)}`}
+          className="text-[10px] font-medium text-[var(--accent-hover)] hover:text-[var(--accent)] hover:underline transition-colors"
+        >
+          + Track
+        </Link>
+        <ExternalLinks name={show.name} tmdbId={show.tmdbId} />
+      </div>
     </div>
   );
 }
@@ -282,6 +286,7 @@ export default function TrendsPage() {
                           >
                             + Track
                           </Link>
+                          <ExternalLinks name={item.name} tmdbId={item.tmdbId} />
                         </div>
                       </div>
                     </div>

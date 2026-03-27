@@ -1,13 +1,21 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { and, eq, sql } from "drizzle-orm";
+import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { shows, episodes, watchedEpisodes } from "@/lib/schema";
 import { getShow, getEpisodes } from "@/lib/tvdb";
-import { eq, sql } from "drizzle-orm";
+import { findByTvdbId, getShowTmdbDetails } from "@/lib/tmdb";
 
 export async function GET() {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // COUNT aggregates — much faster than loading all episode rows
     const rows = await db
       .select({
@@ -19,6 +27,9 @@ export async function GET() {
         status: shows.status,
         network: shows.network,
         archived: shows.archived,
+        tmdbId: shows.tmdbId,
+        imdbId: shows.imdbId,
+        tmdbRating: shows.tmdbRating,
         createdAt: shows.createdAt,
         totalEpisodes: sql<number>`count(distinct ${episodes.id})`.as("total_episodes"),
         watchedCount: sql<number>`count(distinct ${watchedEpisodes.id})`.as("watched_count"),
@@ -26,6 +37,7 @@ export async function GET() {
       .from(shows)
       .leftJoin(episodes, eq(episodes.showId, shows.id))
       .leftJoin(watchedEpisodes, eq(watchedEpisodes.episodeId, episodes.id))
+      .where(eq(shows.userId, userId))
       .groupBy(shows.id)
       .orderBy(shows.name);
 
@@ -38,6 +50,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
     const { tvdbId } = body;
 
@@ -49,7 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     const existing = await db.query.shows.findFirst({
-      where: eq(shows.tvdbId, tvdbId),
+      where: and(eq(shows.userId, userId), eq(shows.tvdbId, tvdbId)),
     });
 
     if (existing) {
@@ -64,6 +82,7 @@ export async function POST(request: NextRequest) {
     const [newShow] = await db
       .insert(shows)
       .values({
+        userId,
         tvdbId: tvdbShow.id,
         name: tvdbShow.name,
         overview: tvdbShow.overview ?? null,
@@ -92,6 +111,17 @@ export async function POST(request: NextRequest) {
           }))
         ).onConflictDoNothing();
       }
+    }
+
+    // Fetch TMDB details (non-critical — don't fail the request if this errors)
+    try {
+      const tmdbId = await findByTvdbId(tvdbShow.id);
+      if (tmdbId !== null) {
+        const { imdbId, voteAverage } = await getShowTmdbDetails(tmdbId);
+        await db.update(shows).set({ tmdbId, imdbId, tmdbRating: voteAverage || null }).where(eq(shows.id, newShow.id));
+      }
+    } catch (e) {
+      console.warn("Failed to fetch TMDB details for show:", e);
     }
 
     return NextResponse.json({ show: newShow }, { status: 201 });

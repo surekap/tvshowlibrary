@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getShowColor } from "@/lib/utils";
+import ExternalLinks from "@/components/ExternalLinks";
 
 interface TrackedShow {
   id: number;
@@ -14,6 +15,9 @@ interface TrackedShow {
   status: string | null;
   network: string | null;
   archived: boolean;
+  tmdbId: number | null;
+  imdbId: string | null;
+  tmdbRating: number | null;
   createdAt: string;
   totalEpisodes: number;
   watchedCount: number;
@@ -432,6 +436,16 @@ function ShowItem({
           <div className="progress-track" style={{ height: '6px' }}>
             <div className="progress-fill" style={{ width: `${progress}%`, backgroundColor: progress === 100 ? "var(--watched)" : color }} />
           </div>
+        </div>
+
+        {/* Rating + external links */}
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          {show.tmdbRating ? (
+            <span className="text-xs text-[var(--text-secondary)] tabular-nums">★ {show.tmdbRating.toFixed(1)}</span>
+          ) : (
+            <span />
+          )}
+          <ExternalLinks name={show.name} tmdbId={show.tmdbId} imdbId={show.imdbId} />
         </div>
 
         {/* Actions */}

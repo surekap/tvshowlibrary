@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { getShowColor, formatEpisodeCode, formatAirDate } from "@/lib/utils";
+import ExternalLinks from "@/components/ExternalLinks";
 
 interface Episode {
   id: number;
@@ -25,6 +26,8 @@ interface Show {
   status: string | null;
   network: string | null;
   archived: boolean;
+  tmdbId: number | null;
+  imdbId: string | null;
   episodes: Episode[];
 }
 
@@ -279,6 +282,10 @@ export default function ShowDetailPage({
                   style={{ width: `${progress}%`, backgroundColor: color }}
                 />
               </div>
+            </div>
+
+            <div className="mt-2">
+              <ExternalLinks name={show.name} tmdbId={show.tmdbId} imdbId={show.imdbId} />
             </div>
           </div>
 

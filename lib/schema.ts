@@ -8,6 +8,7 @@ import {
   index,
   primaryKey,
   uniqueIndex,
+  real,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -79,6 +80,9 @@ export const shows = pgTable("shows", {
   status: text("status"),
   network: text("network"),
   archived: boolean("archived").default(false).notNull(),
+  tmdbId: integer("tmdb_id"),
+  imdbId: text("imdb_id"),
+  tmdbRating: real("tmdb_rating"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (t) => ({
   userIdIdx: index("shows_user_id_idx").on(t.userId),
