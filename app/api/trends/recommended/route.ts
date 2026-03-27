@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 import { NextResponse } from "next/server";
-import { and, eq, desc } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { shows, recommendationsCache } from "@/lib/schema";
@@ -45,7 +45,7 @@ export async function GET() {
     const libraryShows = await db
       .select({ id: shows.id, name: shows.name, tvdbId: shows.tvdbId })
       .from(shows)
-      .where(eq(shows.userId, userId));
+      .where(and(eq(shows.userId, userId), eq(shows.archived, false)));
 
     if (libraryShows.length === 0) {
       return NextResponse.json({ recommended: [], cachedAt: new Date() });

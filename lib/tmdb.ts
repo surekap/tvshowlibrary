@@ -170,7 +170,7 @@ export async function getRecommendations(
 ): Promise<RecommendedItem[]> {
   const scores = new Map<
     number,
-    { count: number; show: TmdbListResult; becauseOf: string }
+    { show: TmdbListResult; sourceCounts: Map<number, number> }
   >();
 
   // Process in batches of 10 concurrent requests
@@ -194,12 +194,11 @@ export async function getRecommendations(
         if (excludeIds.has(show.id)) continue;
         const existing = scores.get(show.id);
         if (existing) {
-          existing.count++;
+          existing.sourceCounts.set(sourceId, (existing.sourceCounts.get(sourceId) ?? 0) + 1);
         } else {
           scores.set(show.id, {
-            count: 1,
             show,
-            becauseOf: libraryNames.get(sourceId) ?? "your library",
+            sourceCounts: new Map([[sourceId, 1]]),
           });
         }
       }
@@ -207,10 +206,14 @@ export async function getRecommendations(
   }
 
   return Array.from(scores.values())
-    .sort(
-      (a, b) =>
-        b.count - a.count || b.show.popularity - a.show.popularity
-    )
+    .map(({ show, sourceCounts }) => {
+      const count = Array.from(sourceCounts.values()).reduce((a, b) => a + b, 0);
+      // Pick the library show that most frequently triggered this recommendation
+      const topSourceId = Array.from(sourceCounts.entries()).sort(([, a], [, b]) => b - a)[0][0];
+      const becauseOf = libraryNames.get(topSourceId) ?? "your library";
+      return { show, count, becauseOf };
+    })
+    .sort((a, b) => b.count - a.count || b.show.popularity - a.show.popularity)
     .slice(0, 20)
     .map(({ show, count, becauseOf }) => ({
       ...mapToTmdbShow(show),

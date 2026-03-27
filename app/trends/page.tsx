@@ -153,7 +153,11 @@ export default function TrendsPage() {
       .finally(() => setTrendsLoading(false));
 
     fetch("/api/trends/recommended", { cache: "no-store" })
-      .then((r) => { if (!r.ok) throw new Error("Failed"); return r.json(); })
+      .then((r) => {
+        if (r.status === 401) return { recommended: [] };
+        if (!r.ok) throw new Error("Failed");
+        return r.json();
+      })
       .then((data) => setRecommended(data.recommended ?? []))
       .catch(() => setRecommendedError("Failed to load recommendations."))
       .finally(() => setRecommendedLoading(false));
