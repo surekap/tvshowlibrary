@@ -11,19 +11,46 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Explicitly set secureCookie based on NEXTAUTH_URL so the correct cookie
-  // name is used. In production (HTTPS) NextAuth sets __Secure-next-auth.session-token;
-  // withAuth defaults secureCookie=false and looks for the non-prefixed name, causing
-  // the token to appear missing even though getServerSession can read it fine.
   const secureCookie = process.env.NEXTAUTH_URL?.startsWith("https://") ?? true;
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
+  const cookieName = secureCookie
+    ? "__Secure-next-auth.session-token"
+    : "next-auth.session-token";
+  const hasCookie = request.cookies.has(cookieName);
+
+  console.log("[proxy]", request.nextUrl.pathname, {
     secureCookie,
+    cookieName,
+    hasCookie,
+    hasSecret: !!process.env.NEXTAUTH_SECRET,
   });
 
-  if (!token) {
+  // If there's no session cookie at all, redirect immediately (no point calling getToken).
+  if (!hasCookie) {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // Cookie exists — try to verify it. If verification throws (e.g. wrong secret),
+  // fall back to trusting the cookie presence so we don't create a redirect loop.
+  let token = null;
+  try {
+    token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET,
+      secureCookie,
+      cookieName,
+    });
+  } catch (err) {
+    console.error("[proxy] getToken threw:", err);
+  }
+
+  console.log("[proxy] token:", token ? "found" : "null");
+
+  if (!token) {
+    // Cookie exists but couldn't be verified — clear it and send to login
+    // so the user gets a fresh sign-in rather than an infinite loop.
+    const res = NextResponse.redirect(new URL("/login", request.url));
+    res.cookies.delete(cookieName);
+    return res;
   }
 
   return NextResponse.next();
