@@ -46,7 +46,7 @@ function CompactCard({
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-[var(--border)] last:border-0">
       {/* Poster */}
-      <div className="relative w-10 h-14 flex-shrink-0 bg-[var(--bg-elevated)] rounded overflow-hidden">
+      <div className="relative w-10 h-[60px] flex-shrink-0 bg-[var(--bg-elevated)] rounded overflow-hidden">
         {show.posterUrl ? (
           <Image
             src={show.posterUrl}
@@ -187,7 +187,7 @@ export default function TrendsPage() {
       </div>
 
       {/* Main layout */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* ── Main column: Trending ────────────────────────────────────────── */}
         <div className="flex-1 min-w-0">
           {trendsLoading ? (
@@ -289,7 +289,7 @@ export default function TrendsPage() {
         </div>
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-        <div className="w-full lg:w-72 xl:w-80 flex-shrink-0 space-y-4">
+        <div className="w-full md:w-72 xl:w-80 flex-shrink-0 space-y-4">
           {/* New This Season */}
           <SidebarPanel
             title="New This Season"
@@ -297,15 +297,7 @@ export default function TrendsPage() {
             error={trendsError}
           >
             {(trendsData?.newShows ?? []).slice(0, 5).map((show) => (
-              <CompactCard
-                key={show.tmdbId}
-                show={show}
-                subLabel={
-                  show.firstAirDate
-                    ? `Premiered ${new Date(show.firstAirDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })}`
-                    : undefined
-                }
-              />
+              <CompactCard key={show.tmdbId} show={show} />
             ))}
           </SidebarPanel>
 
