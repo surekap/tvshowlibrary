@@ -351,7 +351,7 @@ h3 { font-size: clamp(1rem, 2vw, 1.125rem); font-weight: 600; }
   --fc-button-active-bg-color:     var(--accent);
   --fc-button-active-border-color: var(--accent);
   --fc-button-text-color:          var(--text-primary);
-  --fc-today-bg-color:             var(--accent-dim);
+  --fc-today-bg-color:             rgba(34, 211, 165, 0.07);
   --fc-page-bg-color:              var(--bg-surface);
   --fc-neutral-bg-color:           var(--bg-elevated);
   --fc-list-event-hover-bg-color:  var(--bg-elevated);
@@ -384,8 +384,17 @@ h3 { font-size: clamp(1rem, 2vw, 1.125rem); font-weight: 600; }
 }
 
 .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-  color: var(--accent-hover);
+  background-color: var(--watched);
+  color: #071a13;
+  border-radius: 50%;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 700;
+  padding: 0;
+  line-height: 1;
 }
 
 .fc .fc-daygrid-day-frame {
@@ -433,10 +442,10 @@ h3 { font-size: clamp(1rem, 2vw, 1.125rem); font-weight: 600; }
 }
 
 .fc .fc-event.watched-event {
-  background-color: var(--bg-elevated) !important;
-  border-color: var(--border-hover) !important;
-  color: var(--text-dim) !important;
+  opacity: 0.38;
   text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-decoration-color: rgba(255, 255, 255, 0.65);
 }
 
 .fc .fc-event-title {

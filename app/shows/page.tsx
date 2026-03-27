@@ -440,8 +440,8 @@ function ShowItem({
 
         {/* Rating + external links */}
         <div className="mt-2.5 flex items-center justify-between gap-2">
-          {show.tmdbRating ? (
-            <span className="text-xs text-[var(--text-secondary)] tabular-nums">★ {show.tmdbRating.toFixed(1)}</span>
+          {show.tmdbRating != null ? (
+            <span className="text-xs text-[var(--text-secondary)] tabular-nums">★ {Number(show.tmdbRating).toFixed(1)}</span>
           ) : (
             <span />
           )}
