@@ -190,7 +190,7 @@ export type Episode = typeof episodes.$inferSelect;
 export type NewEpisode = typeof episodes.$inferInsert;
 export const trendsCache = pgTable("trends_cache", {
   id: serial("id").primaryKey(),
-  data: text("data").notNull(), // JSON array of top trending shows
+  data: text("data").notNull(), // JSON: { trending, newShows, topRated }
   cachedAt: timestamp("cached_at").defaultNow().notNull(),
 });
 
