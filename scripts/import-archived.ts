@@ -4,7 +4,7 @@ import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { eq, inArray } from "drizzle-orm";
 import * as schema from "../lib/schema";
-import { shows, episodes, watchedEpisodes } from "../lib/schema";
+import { shows, episodes, watchedEpisodes, users } from "../lib/schema";
 
 const TVDB_BASE_URL = "https://api4.thetvdb.com/v4";
 let cachedToken: string | null = null;
@@ -57,12 +57,24 @@ async function getAllEpisodes(tvdbId: number) {
 }
 
 async function main() {
+  const ownerEmail = process.env.ARCHIVED_IMPORT_USER_EMAIL;
+  if (!ownerEmail) {
+    throw new Error("ARCHIVED_IMPORT_USER_EMAIL is required");
+  }
+
   const archived: { name: string; tvdb_id: number }[] = JSON.parse(
     readFileSync(join(process.cwd(), "archived_shows.json"), "utf-8")
   );
 
   const sql = neon(process.env.DATABASE_URL!, { fetchOptions: { cache: "no-store" } });
   const db = drizzle(sql, { schema });
+  const owner = await db.query.users.findFirst({
+    where: eq(users.email, ownerEmail),
+  });
+
+  if (!owner) {
+    throw new Error(`No user found for ${ownerEmail}`);
+  }
 
   let added = 0, skipped = 0;
   const failed: string[] = [];
@@ -72,7 +84,10 @@ async function main() {
     process.stdout.write(`[${i + 1}/${archived.length}] ${item.name} ... `);
 
     try {
-      const existing = await db.query.shows.findFirst({ where: eq(shows.tvdbId, item.tvdb_id) });
+      const existing = await db.query.shows.findFirst({
+        where: (table, { and, eq }) =>
+          and(eq(table.userId, owner.id), eq(table.tvdbId, item.tvdb_id)),
+      });
 
       let showId: number;
 
@@ -85,6 +100,7 @@ async function main() {
         if (!tvdbShow) { process.stdout.write("not found on TVDB\n"); failed.push(item.name); continue; }
 
         const [newShow] = await db.insert(shows).values({
+          userId: owner.id,
           tvdbId: tvdbShow.id, name: tvdbShow.name,
           overview: tvdbShow.overview ?? null, posterUrl: tvdbShow.image ?? null,
           status: tvdbShow.status?.name ?? null, network: tvdbShow.originalNetwork?.name ?? null,

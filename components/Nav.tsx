@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 const navItems = [
   {
@@ -59,6 +60,11 @@ const navItems = [
 
 export function TopNav() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  if (!session?.user) {
+    return null;
+  }
 
   return (
     <nav className="hidden md:flex items-center gap-0.5">
@@ -86,6 +92,11 @@ export function TopNav() {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { data: session } = useSession();
+
+  if (!session?.user) {
+    return null;
+  }
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 nav-bottom">

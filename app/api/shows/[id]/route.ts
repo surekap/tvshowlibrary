@@ -1,15 +1,22 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { and, eq } from "drizzle-orm";
+import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { shows } from "@/lib/schema";
-import { eq } from "drizzle-orm";
 
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id: idStr } = await params;
     const id = parseInt(idStr, 10);
 
@@ -18,7 +25,7 @@ export async function DELETE(
     }
 
     const existing = await db.query.shows.findFirst({
-      where: eq(shows.id, id),
+      where: and(eq(shows.id, id), eq(shows.userId, userId)),
     });
 
     if (!existing) {
@@ -26,7 +33,7 @@ export async function DELETE(
     }
 
     // Cascade delete handles episodes and watched_episodes
-    await db.delete(shows).where(eq(shows.id, id));
+    await db.delete(shows).where(and(eq(shows.id, id), eq(shows.userId, userId)));
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -43,6 +50,12 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id: idStr } = await params;
     const id = parseInt(idStr, 10);
 
@@ -51,7 +64,7 @@ export async function GET(
     }
 
     const show = await db.query.shows.findFirst({
-      where: eq(shows.id, id),
+      where: and(eq(shows.id, id), eq(shows.userId, userId)),
       with: {
         episodes: {
           with: {
@@ -84,6 +97,12 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id: idStr } = await params;
     const id = parseInt(idStr, 10);
     if (isNaN(id)) {
@@ -98,7 +117,7 @@ export async function PATCH(
     const [updated] = await db
       .update(shows)
       .set({ archived: body.archived })
-      .where(eq(shows.id, id))
+      .where(and(eq(shows.id, id), eq(shows.userId, userId)))
       .returning({ id: shows.id, archived: shows.archived });
 
     if (!updated) {

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { TmdbShow, TrendItem, NewShowItem, TopRatedItem, RecommendedItem } from "@/lib/tmdb";
 import ExternalLinks from "@/components/ExternalLinks";
+import ShowPoster from "@/components/ShowPoster";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -47,23 +48,7 @@ function CompactCard({
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-[var(--border)] last:border-0">
       {/* Poster */}
-      <div className="relative w-10 h-[60px] flex-shrink-0 bg-[var(--bg-elevated)] rounded overflow-hidden">
-        {show.posterUrl ? (
-          <Image
-            src={show.posterUrl}
-            alt={show.name}
-            fill
-            className="object-cover"
-            sizes="40px"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <svg aria-hidden="true" className="w-4 h-4 text-[var(--text-dim)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-            </svg>
-          </div>
-        )}
-      </div>
+      <ShowPoster posterUrl={show.posterUrl} name={show.name} className="w-10 h-[60px]" sizes="40px" />
 
       {/* Info */}
       <div className="flex-1 min-w-0">

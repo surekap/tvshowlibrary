@@ -16,9 +16,11 @@ function getDb(): DrizzleDb {
   return _db;
 }
 
+export const rawDb = getDb();
+
 export const db = new Proxy({} as DrizzleDb, {
   get(_target, prop) {
-    const instance = getDb();
+    const instance = rawDb;
     const value = instance[prop as keyof DrizzleDb];
     if (typeof value === "function") {
       return value.bind(instance);

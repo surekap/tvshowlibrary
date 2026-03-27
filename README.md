@@ -9,6 +9,7 @@ A web application for tracking TV shows and managing a personal episode-watching
 ## Tech Stack
 
 - Next.js 16 / TypeScript
+- NextAuth.js with Google OAuth
 - FullCalendar
 - Drizzle ORM
 - Neon Postgres (serverless PostgreSQL)

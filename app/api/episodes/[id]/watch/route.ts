@@ -1,15 +1,22 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { and, eq } from "drizzle-orm";
+import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { watchedEpisodes, episodes } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { episodes, shows, watchedEpisodes } from "@/lib/schema";
 
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id: idStr } = await params;
     const episodeId = parseInt(idStr, 10);
 
@@ -21,9 +28,12 @@ export async function POST(
     }
 
     // Verify episode exists
-    const episode = await db.query.episodes.findFirst({
-      where: eq(episodes.id, episodeId),
-    });
+    const [episode] = await db
+      .select({ id: episodes.id })
+      .from(episodes)
+      .innerJoin(shows, eq(shows.id, episodes.showId))
+      .where(and(eq(episodes.id, episodeId), eq(shows.userId, userId)))
+      .limit(1);
 
     if (!episode) {
       return NextResponse.json(
@@ -43,7 +53,7 @@ export async function POST(
 
     const [watched] = await db
       .insert(watchedEpisodes)
-      .values({ episodeId })
+      .values({ episodeId, userId })
       .returning();
 
     return NextResponse.json({ watched }, { status: 201 });
@@ -61,6 +71,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id: idStr } = await params;
     const episodeId = parseInt(idStr, 10);
 
@@ -68,6 +84,20 @@ export async function DELETE(
       return NextResponse.json(
         { error: "Invalid episode ID" },
         { status: 400 }
+      );
+    }
+
+    const [episode] = await db
+      .select({ id: episodes.id })
+      .from(episodes)
+      .innerJoin(shows, eq(shows.id, episodes.showId))
+      .where(and(eq(episodes.id, episodeId), eq(shows.userId, userId)))
+      .limit(1);
+
+    if (!episode) {
+      return NextResponse.json(
+        { error: "Episode not found" },
+        { status: 404 }
       );
     }
 

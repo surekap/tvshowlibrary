@@ -1,9 +1,16 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { searchShows } from "@/lib/tvdb";
 
 export async function GET(request: NextRequest) {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("q");
 

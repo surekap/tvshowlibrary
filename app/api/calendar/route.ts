@@ -1,12 +1,19 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { episodes, shows, watchedEpisodes } from "@/lib/schema";
 import { and, gte, lte, eq, ne } from "drizzle-orm";
 import { getShowColor } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const start = searchParams.get("start");
   const end = searchParams.get("end");
@@ -43,6 +50,7 @@ export async function GET(request: NextRequest) {
         and(
           gte(episodes.aired, start.slice(0, 10)),
           lte(episodes.aired, end.slice(0, 10)),
+          eq(shows.userId, userId),
           ne(shows.archived, true)
         )
       );

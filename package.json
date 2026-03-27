@@ -10,6 +10,7 @@
     "db:studio": "node --env-file=.env.local ./node_modules/.bin/drizzle-kit studio"
   },
   "dependencies": {
+    "@auth/drizzle-adapter": "^1.11.1",
     "@fullcalendar/core": "^6.1.11",
     "@fullcalendar/daygrid": "^6.1.11",
     "@fullcalendar/interaction": "^6.1.11",
@@ -20,6 +21,7 @@
     "autoprefixer": "^10.4.27",
     "drizzle-orm": "^0.45.1",
     "next": "^16.1.6",
+    "next-auth": "^4.24.13",
     "react": "^18",
     "react-dom": "^18"
   },

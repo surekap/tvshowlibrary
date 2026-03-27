@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getShowColor } from "@/lib/utils";
 import ExternalLinks from "@/components/ExternalLinks";
+import ShowPoster from "@/components/ShowPoster";
 
 interface TrackedShow {
   id: number;
@@ -393,17 +394,7 @@ function ShowItem({
       <div className="h-1 w-full" style={{ backgroundColor: color }} />
       <div className="p-4">
         <Link href={`/shows/${show.id}`} className="flex gap-3 hover:opacity-90 transition-opacity">
-          <div className="relative w-14 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-[var(--bg-elevated)]">
-            {show.posterUrl ? (
-              <Image src={show.posterUrl} alt={show.name} fill className="object-cover" sizes="56px" />
-            ) : (
-              <div className="poster-placeholder w-full h-full">
-                <svg aria-hidden="true" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                </svg>
-              </div>
-            )}
-          </div>
+          <ShowPoster posterUrl={show.posterUrl} name={show.name} className="w-14 h-20 rounded-lg" sizes="56px" />
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-[var(--text-primary)] text-sm leading-tight line-clamp-2 group-hover:text-[var(--accent-hover)] transition-colors">{show.name}</h3>
             <div className="flex flex-wrap gap-1.5 mt-1">

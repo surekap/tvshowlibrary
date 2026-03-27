@@ -1,12 +1,19 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
+import { getCurrentUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { episodes, shows, watchedEpisodes } from "@/lib/schema";
 import { and, eq, isNull, lte, isNotNull, ne } from "drizzle-orm";
 
 export async function GET() {
   try {
+    const userId = await getCurrentUserId();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     // All episodes with their show and watched status
     const rows = await db
       .select({
@@ -31,6 +38,7 @@ export async function GET() {
           isNull(watchedEpisodes.id),
           isNotNull(episodes.aired),
           lte(episodes.aired, new Date().toISOString().slice(0, 10)),
+          eq(shows.userId, userId),
           ne(shows.archived, true)
         )
       );

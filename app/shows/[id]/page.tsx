@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, use } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { getShowColor, formatEpisodeCode, formatAirDate } from "@/lib/utils";
 import ExternalLinks from "@/components/ExternalLinks";
+import ShowPoster from "@/components/ShowPoster";
 
 interface Episode {
   id: number;
@@ -226,17 +226,7 @@ export default function ShowDetailPage({
         <div className="h-1 w-full" style={{ backgroundColor: color }} />
         <div className="p-5 flex gap-5">
           {/* Poster */}
-          <div className="relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-[var(--bg-elevated)]">
-            {show.posterUrl ? (
-              <Image src={show.posterUrl} alt={show.name} fill className="object-cover" sizes="96px" />
-            ) : (
-              <div className="poster-placeholder w-full h-full">
-                <svg aria-hidden="true" className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                </svg>
-              </div>
-            )}
-          </div>
+          <ShowPoster posterUrl={show.posterUrl} name={show.name} className="w-24 h-36 rounded-lg" sizes="96px" />
 
           {/* Info */}
           <div className="flex-1 min-w-0">
